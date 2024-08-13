@@ -7,15 +7,11 @@ def main():
     'From': 'no-reply@classroom.google.com',
     'Subject': 'New assignment'
     }
-    messages = service.run(max_results=10, filter_criteria=filter_criteria)    
+    messages = service.run(max_results=30, filter_criteria=filter_criteria)    
     print(messages)
     service.save_to_json(messages, 'classroom_data.json')
     
-    filtered_messages = []
-    for message in messages:
-        if "classroom.google.com" in message['payload']['headers']['From'] and "New assignment" in message['payload']['headers']['Subject']:
-            filtered_messages.append(message)
-
+    filtered_messages = service.filter_messages(messages)
     service.save_to_json(filtered_messages, 'filtered_classroom_data.json')
     
 main()

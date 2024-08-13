@@ -100,9 +100,6 @@ class ClassroomDataManager:
         messages = self.get_messages(max_results)
         print(f"Total messages fetched: {len(messages)}")
 
-        if filter_criteria:
-            messages = self.filter_messages(messages, filter_criteria)
-
         processed_messages = []
         for message in messages:
             details = self.get_message_details(message['id'])
@@ -114,17 +111,14 @@ class ClassroomDataManager:
                     'snippet': details.get('snippet', ''),
                     'payload': self.process_payload(details.get('payload', {}))
                 }
-                processed_messages.append(message)
             else:
                 print(f"Could not fetch details for message ID: {message['id']}")
 
         print(f"Total processed messages: {len(processed_messages)}")
         
-        print("Filtering messages...")
-        filtered_messages = self.filter_messages(processed_messages)
         
         print(f"Total filtered messages: {len(filtered_messages)}")
-        return filtered_messages
+        return messages
     
     
     def filter_message(self, message, criteria):
@@ -150,7 +144,7 @@ class ClassroomDataManager:
             # Add more criteria as needed
         return True
     
-    def filter_messages(self, messages, criteria):
+    def filter_messages(self, messages):
         """
         Filter a list of messages based on the given criteria.
         
@@ -181,16 +175,11 @@ class ClassroomDataManager:
                     'snippet': details.get('snippet', ''),
                     'payload': self.process_payload(details.get('payload', {}))
                 }
-                messages.append(message)
+                processed_messages.append(message)
             else:
                 print(f"Could not fetch details for message ID: {message['id']}")
 
         print(f"Total processed messages: {len(processed_messages)}")
-        
-        printf("Filtering messages...")
-        processed_messages = self.filter_messages(messages)
-        
-        print(f"Total filtered messages: {len(processed_messages)}")
         
         return processed_messages
     
