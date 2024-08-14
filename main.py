@@ -13,10 +13,15 @@ def main():
     'Subject': 'New assignment'
     }
     
-    with open('outputs/classroom_data.json', 'r') as file:
-        cache = json.load(file)
+    try: 
+        with open('outputs/classroom_data.json', 'r') as file:
+            cache = json.load(file)
+    except FileNotFoundError:
+        cache = []
     
-    if cache[0]['id'] == cdm.run(max_results=2, filter_criteria=filter_criteria)[0]['id']:
+    if len(cache) == 0:
+        messages = cdm.run(max_results=20, filter_criteria=filter_criteria)
+    elif cache[0]['id'] == cdm.run(max_results=2, filter_criteria=filter_criteria)[0]['id']:
         print('No new messages. Using cache for data')
         messages = cache
     else:
