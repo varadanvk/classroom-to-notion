@@ -1,3 +1,6 @@
+constants
+outputs
+.env
 credentials.json
 token.json
-outputs
+.env
