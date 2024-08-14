@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import base64
 from google.auth.transport.requests import Request
@@ -28,7 +29,9 @@ class ClassroomDataManager:
         if os.path.exists(self.token_file):
             print(f"Token file found: {self.token_file}")
             self.creds = Credentials.from_authorized_user_file(self.token_file, self.SCOPES)
+        
         if not self.creds or not self.creds.valid:
+            print("No valid credentials found.")
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 print("Refreshing expired credentials...")
                 self.creds.refresh(Request())
@@ -36,16 +39,10 @@ class ClassroomDataManager:
                 print(f"Running OAuth flow with {self.credentials_file}...")
                 flow = InstalledAppFlow.from_client_secrets_file(self.credentials_file, self.SCOPES)
                 self.creds = flow.run_local_server(port=0)
+            
             print("Saving new token...")
             with open(self.token_file, "w") as token:
                 token.write(self.creds.to_json())
-
-        print("Building Gmail API service...")
-        self.service = build("gmail", "v1", credentials=self.creds)
-        print("Authentication completed.")
-        
-        # Save authentication status
-        auth_status = {"authenticated": self.creds is not None}
 
     def get_messages(self, max_results=100):
         print(f"Fetching up to {max_results} messages...")
@@ -188,9 +185,71 @@ class ClassroomDataManager:
         for message in messages:
             return None
     
+    def extract_assignment_info(self, messages):
+
+        extracted_data = []
+        for data in messages:        
+                # Extract the HTML content
+                html_content = data['payload']['parts'][1]['body']
+
+                # Extract assignment name
+                assignment_name_match = re.search(r'<div>(.*?)</div>', html_content)
+                assignment_name = assignment_name_match.group(1) if assignment_name_match else "Not found"
+
+                # Extract class link
+                
+                link_pattern = "https://accounts\.google\.com/AccountChooser\?continue="
+                link_match = re.search(r'href=(https://accounts\.google\.com/AccountChooser\?continue=https://classroom\.google\.com/c/[^&]+)', html_content)
+                class_link = link_match.group(1) if link_match else "Not found"
+                class_link = re.sub(link_pattern, "", class_link)
+                
+                assignment_match=re.search(r'href=(https://accounts\.google\.com/AccountChooser\?continue=https://classroom\.google\.com/c/[^&]+/a/[^&]+)', html_content)
+                assignment_link = assignment_match.group(1) if assignment_match else "Not found"
+                assignment_link = re.sub(link_pattern, "", assignment_link)
+
+                # Extract assignment description
+                description_match = re.search(r'<ul>(.*?)</ul>', html_content, re.DOTALL)
+                if description_match:
+                    description_items = re.findall(r'<li>(.*?)</li>', description_match.group(1))
+                    assignment_description = "\n".join(description_items)
+                else:
+                    assignment_description = "Not found"
+
+                # Extract class name
+                class_match = re.search(r'>([^<]+)</td></tr></table></a></td>', html_content)
+                class_name = class_match.group(1) if class_match else "Not found"
+
+                # Extract due date
+                due_date_match = re.search(r'Due ([^<]+)', html_content)
+                due_date = due_date_match.group(1) if due_date_match else "Not found"
+
+                # Extract posted date and author
+                posted_info_match = re.search(r'Posted on ([^<]+) by ([^<]+)', html_content)
+                if posted_info_match:
+                    posted_date = posted_info_match.group(1)
+                    posted_by = posted_info_match.group(2)
+                else:
+                    posted_date = "Not found"
+                    posted_by = "Not found"
+
+                extracted_data.append( {
+                    "assignment_name": assignment_name,
+                    "assignment_link": assignment_link,
+                    "class_link": class_link,
+                    "assignment_description": assignment_description,
+                    "class_name": class_name,
+                    "due_date": due_date,
+                    "posted_date": posted_date,
+                    "posted_by": posted_by,
+                })
+        return extracted_data
+            
+
+    
     def run(self, max_results=100, output_file="classroom_data.json", filter_criteria=None):
         print("Starting ClassroomDataManager...")
         self.authenticate()
+        self.service = build("gmail", "v1", credentials=self.creds)
         processed_messages = self.process_messages(max_results, filter_criteria)
         print(processed_messages)
         if processed_messages:
