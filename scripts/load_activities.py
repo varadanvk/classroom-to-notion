@@ -1,26 +1,32 @@
-
 from dotenv import load_dotenv
 import os
 import json
 from typing import List, Dict, Any
 from services.notion import NotionDatabaseManager
 
-
-def save_to_json(data, filename):
-    with open(filename, 'w') as file:
-        json.dump(data, file, indent=2)
-
-def query_database(database_id: str, statuses: List[str]) -> Dict[str, Any]:
-    ndm = NotionDatabaseManager(database_id)
-    results = ndm.get_tasks_by_status(statuses)
-    print(json.dumps(results, indent=2))
-    save_to_json(results, 'outputs/notion_results.json') #Can be removed
-    return results
-
-def load_activities():
+def load_activities() -> List[Dict[str, Any]]:
     load_dotenv()
     ndm = NotionDatabaseManager(database_id=os.getenv("ACTIVITIES_DATABASE_ID"), token=os.getenv('NOTION_TOKEN'))
-    response =  query_database(database_id=os.getenv("ACTIVITIES_DATABASE_ID"), statuses=['In Progress'])
+
+    response = ndm.get_tasks_by_status(['In Progress'])
+
+    # Save the full response for debugging
     with open('outputs/notion_results.json', 'w') as file:
         json.dump(response, file, indent=2)
-    return response
+
+    # Extract the actual activity data from the 'results' key
+    activities = []
+    if isinstance(response, dict) and 'results' in response:
+        for item in response['results']:
+            activity = {
+                'id': item.get('id', ''),
+                'title': item.get('properties', {}).get('Name', {}).get('title', [{}])[0].get('plain_text', ''),
+                'teacher': ''  # Initialize teacher as empty string
+            }
+            activities.append(activity)
+    
+    # Save the extracted activities for verification
+    with open('outputs/extracted_activities.json', 'w') as file:
+        json.dump(activities, file, indent=2)
+
+    return activities

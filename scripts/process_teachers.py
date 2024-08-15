@@ -101,4 +101,4 @@ def matcher():
     matcher.run()
 
 if __name__ == "__main__":
-    main()
+    matcher(    )
