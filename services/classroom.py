@@ -239,7 +239,7 @@ class ClassroomDataManager:
         self.authenticate()
         self.service = build("gmail", "v1", credentials=self.creds)
         processed_messages = self.process_messages(max_results, filter_criteria)
-        print(processed_messages)
+        #print(processed_messages)
         if processed_messages:
             #self.save_to_json(processed_messages, output_file)
             print(f"Processed {len(processed_messages)} messages.")

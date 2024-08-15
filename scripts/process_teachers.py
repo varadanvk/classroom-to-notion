@@ -92,10 +92,10 @@ class NotionAssignmentMatcher:
         else:
             print(f"No matching activity found for assignment '{sample_assignment['assignment_name']}'")
 
-def main():
+def matcher():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     notion_results_path = os.path.join(script_dir, 'outputs', 'notion_results.json')
-    output_path = os.path.join(script_dir, 'outputs', 'activities_with_teachers.json')
+    output_path = os.path.join(script_dir, 'constant', 'activities_with_teachers.json')
 
     matcher = NotionAssignmentMatcher(notion_results_path, output_path)
     matcher.run()
