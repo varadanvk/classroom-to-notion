@@ -53,8 +53,8 @@ pip install -r requirements.txt
   NOTION_DATABASE_ID=your_notion_tasks_database_id
   ACTIVITIES_DATABASE_ID=your_notion_activities_database_id
   CALENDAR_ACCOUNT=your_gmail_account
-  ``
-
+  ```
+  
 Note: If your school email doesn't allow access to Google Developers, set up email forwarding to a personal email address that you can use for API access.
 
 ## Usage
@@ -67,9 +67,11 @@ Note: If your school email doesn't allow access to Google Developers, set up ema
 2. Update the `NOTION_DATABASE_ID` and `ACTIVITIES_DATABASE_ID` in your `.env` file with these IDs
 
 3. Run the setup activities script:
+   
 ```
 python setup.py
 ```
+This will prompt you to input your teacher's name for each activity. Once that is finished, all your activity relations will be added in. 
 
 5. Run the scheduelr script:
 ```
