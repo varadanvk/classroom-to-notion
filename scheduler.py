@@ -8,7 +8,7 @@ def job():
     print("Running Classroom to Notion sync...")
     main()
 
-schedule.every(20).seconds.do(job)
+schedule.every(120).seconds.do(job)
 
 while True:
     schedule.run_pending()
