@@ -1,8 +1,17 @@
 from services.matcher import NotionAssignmentMatcher
 from scripts.load_activities import load_activities
+import os
 import json
 
+def create_directory(path):
+    try:
+        os.makedirs(path, exist_ok=True)
+        print(f"Directory '{path}' created successfully")
+    except OSError as error:
+        print(f"Error creating directory '{path}': {error}")
+
 try:
+    create_directory('outputs')
     loaded_activities = load_activities()
     print(f"Loaded activities type: {type(loaded_activities)}")
     print(f"Number of activities loaded: {len(loaded_activities)}")
