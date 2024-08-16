@@ -2,7 +2,6 @@ import os
 import json
 import logging
 from dotenv import load_dotenv
-from setup import create_directory
 from services.classroom import ClassroomDataManager
 from services.notion import NotionDatabaseManager
 from services.assignment_parser import AssignmentParser
