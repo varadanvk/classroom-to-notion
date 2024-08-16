@@ -96,12 +96,15 @@ def main():
         if uncached_data is None:
             logging.info("No new assignments to process")
             print("No new assignments to process")
+            print("-------------------------------------------------")
             return
         else:
             responses = ndm.post_data(uncached_data)
             logging.info(f"Processed {len(responses)} new assignments")
             logging.info("Saving new assignments to cache")
             cdm.save_to_json(responses, 'outputs/new_assignments.json')
+            print("-------------------------------------------------")
+
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
