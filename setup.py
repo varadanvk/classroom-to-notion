@@ -12,6 +12,9 @@ def create_directory(path):
 
 try:
     create_directory('outputs')
+    create_directory('cache')
+    create_directory('constants')
+
     loaded_activities = load_activities()
     print(f"Loaded activities type: {type(loaded_activities)}")
     print(f"Number of activities loaded: {len(loaded_activities)}")
