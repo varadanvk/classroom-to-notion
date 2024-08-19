@@ -97,13 +97,14 @@ def main():
             logging.info("No new assignments to process")
             print("No new assignments to process")
             print("-------------------------------------------------")
-            return
+            return {"message": "No new assignments to process"}
         else:
             responses = ndm.post_data(uncached_data)
             logging.info(f"Processed {len(responses)} new assignments")
             logging.info("Saving new assignments to cache")
             cdm.save_to_json(responses, 'outputs/new_assignments.json')
             print("-------------------------------------------------")
+            return {"message": f"Processed {len(responses)} new assignments"}
 
 
     except Exception as e:
