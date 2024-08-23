@@ -11,7 +11,7 @@ from googleapiclient.errors import HttpError
 from services.google_auth import Authenticator
 
 class ClassroomDataManager:
-    SCOPES = ["https://mail.google.com/"]
+    SCOPES = ["https://mail.google.com/#search/new+assignment"]
 
     def __init__(self, credentials_file="credentials.json", token_file="token.json"):
         self.credentials_file = credentials_file

@@ -99,7 +99,7 @@ class AssignmentParser:
                     "Priority": {
                         "select": None
                     },
-                    "Due date": {
+                    "Due Date": {
                         "date": due_date
                     },
                     "Note": {

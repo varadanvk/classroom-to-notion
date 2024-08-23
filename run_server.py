@@ -10,7 +10,7 @@ async def run_sync():
     print("Running Classroom to Notion sync...")
     try:
         result = await asyncio.to_thread(main)
-        print("Sync completed successfully")
+        print(result)
         return result
     except Exception as e:
         print(f"Error during sync: {str(e)}")
