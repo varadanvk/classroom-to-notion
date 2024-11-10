@@ -70,7 +70,7 @@ class ClassroomDataManager:
         return base64.urlsafe_b64decode(body).decode("utf-8")
     
     def process_payload(self, payload):
-        headers = {header['name']: header['value'] for header in payload.get('headers', [])}
+        headers = {header['name'].lower(): header['value'] for header in payload.get('headers', [])}
         body = self.decode_body(payload.get('body', {}).get('data', ''))
         
         processed_payload = {
@@ -81,6 +81,25 @@ class ClassroomDataManager:
             'parts': [self.process_payload(part) for part in payload.get('parts', [])]
         }
         return processed_payload
+
+    def filter_messages(self, messages):
+        """
+        Filter a list of messages based on the given criteria.
+        
+        :param messages: The list of messages to filter
+        :return: A list of messages that meet all criteria
+        """
+        filtered_messages = []
+        
+        for message in messages:
+            headers = message['payload']['headers']
+            from_header = headers.get('from', '').lower()
+            subject_header = headers.get('subject', '').lower()
+            if "classroom.google.com" in from_header and "new assignment" in subject_header:
+                filtered_messages.append(message)
+            
+        return filtered_messages
+
 
 
     def process_messages(self, max_results=100, filter_criteria=None):
@@ -131,21 +150,21 @@ class ClassroomDataManager:
             # Add more criteria as needed
         return True
     
-    def filter_messages(self, messages):
-        """
-        Filter a list of messages based on the given criteria.
+    # def filter_messages(self, messages):
+    #     """
+    #     Filter a list of messages based on the given criteria.
         
-        :param messages: The list of messages to filter
-        :param criteria: A dictionary where keys are header names and values are desired header values
-        :return: A list of messages that meet all criteria
-        """
-        filtered_messages = []
+    #     :param messages: The list of messages to filter
+    #     :param criteria: A dictionary where keys are header names and values are desired header values
+    #     :return: A list of messages that meet all criteria
+    #     """
+    #     filtered_messages = []
         
-        for message in messages:
-            if "classroom.google.com" in message['payload']['headers']['From'] and "New assignment" in message['payload']['headers']['Subject']:
-                filtered_messages.append(message)
+    #     for message in messages:
+    #         if "classroom.google.com" in message['payload']['headers']['From'] and "New assignment" in message['payload']['headers']['Subject']:
+    #             filtered_messages.append(message)
             
-        return filtered_messages
+    #     return filtered_messages
 
     def process_messages(self, max_results=100, filter_criteria=None):
         messages = self.get_messages(max_results)
@@ -247,4 +266,3 @@ class ClassroomDataManager:
         else:
             print("No messages were processed. Check the logs for errors.")
             return None
-

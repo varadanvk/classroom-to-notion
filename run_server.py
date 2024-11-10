@@ -21,6 +21,12 @@ async def trigger_sync(background_tasks: BackgroundTasks):
     background_tasks.add_task(run_sync)
     return {"message": "Sync task has been triggered and is running in the background. Check your Notion workspace for updates."}
 
+@app.post("/run-sync")
+async def run_sync_endpoint():
+    result = await run_sync()
+    return result
+
+
 @app.get("/")
 async def root():
     return {"message": "Classroom to Notion Sync Server is running"}

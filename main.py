@@ -61,55 +61,77 @@ def main():
         # Initialize AssignmentParser with loaded activities
         ap = AssignmentParser(activities)
         
+        # Use lowercase keys for filter criteria
         filter_criteria = {
-            'From': 'no-reply@classroom.google.com',
-            'Subject': 'New assignment'
+            'from': 'no-reply@classroom.google.com',
+            'subject': 'New assignment'
         }
         
         email_cache = load_json_file('outputs/classroom_data.json')
         
+        # Improved caching logic
         if len(email_cache) == 0:
             logging.info("Cache is empty, running service")
             messages = cdm.run(max_results=20, filter_criteria=filter_criteria)
-            cdm.save_to_json(messages, 'outputs/classroom_data.json')
-        elif email_cache and email_cache[0]['id'] == cdm.run(max_results=2, filter_criteria=filter_criteria)[0]['id']:
-            logging.info('No new messages. Using email_cache for data')
-            messages = email_cache
         else:
-            messages = cdm.run(max_results=20, filter_criteria=filter_criteria)    
-            logging.info(f"Retrieved {len(messages)} new messages")
+            # Check last 5 messages instead of just 1 to avoid missing any
+            latest_messages = cdm.run(max_results=5, filter_criteria=filter_criteria)
+            if latest_messages:
+                # Check if any of the new messages are not in our cache
+                cached_ids = {msg['id'] for msg in email_cache}
+                new_message_exists = any(msg['id'] not in cached_ids for msg in latest_messages)
+                
+                if not new_message_exists:
+                    logging.info('No new messages. Using email_cache for data')
+                    messages = email_cache
+                else:
+                    messages = cdm.run(max_results=20, filter_criteria=filter_criteria)    
+                    logging.info(f"Retrieved {len(messages)} new messages")
+            else:
+                messages = email_cache  # Fallback to cache if API call fails
+        
+        # Save the messages to cache
+        if messages:
             cdm.save_to_json(messages, 'outputs/classroom_data.json')
+            
+            filtered_messages = cdm.filter_messages(messages)
+            cdm.save_to_json(filtered_messages, 'outputs/filtered_classroom_data.json')
 
-        # Filter Messages
-        filtered_messages = cdm.filter_messages(messages)
-        cdm.save_to_json(filtered_messages, 'outputs/filtered_classroom_data.json')
-        
-        # Extract assignment info
-        extracted_data = cdm.extract_assignment_info(filtered_messages)
-        cdm.save_to_json(extracted_data, 'outputs/extracted_classroom_data.json')
-        
-        # Parse and filter 
-        parsed_data = ap.parse_assignments(extracted_data)
-        uncached_data = notion_cache.filter_with_cache(parsed_data)
-        
-        # Add new assignments to Notion
-        if uncached_data is None:
-            logging.info("No new assignments to process")
-            print("No new assignments to process")
-            print("-------------------------------------------------")
-            return {"message": "No new assignments to process"}
+            
+            # Extract assignment info (messages are already filtered)
+            print('filtering messages')
+            extracted_data = cdm.extract_assignment_info(filtered_messages)
+            if extracted_data:
+                cdm.save_to_json(extracted_data, 'outputs/extracted_classroom_data.json')
+                
+                # Parse and filter
+                parsed_data = ap.parse_assignments(extracted_data)
+                uncached_data = notion_cache.filter_with_cache(parsed_data)
+                
+                # Add new assignments to Notion
+                if not uncached_data:
+                    logging.info("No new assignments to process")
+                    print("No new assignments to process")
+                    print("-------------------------------------------------")
+                    return {"message": "No new assignments to process"}
+                else:
+                    responses = ndm.post_data(uncached_data)
+                    logging.info(f"Processed {len(responses)} new assignments")
+                    logging.info("Saving new assignments to cache")
+                    cdm.save_to_json(responses, 'outputs/new_assignments.json')
+                    print("-------------------------------------------------")
+                    return {"message": f"Processed {len(responses)} new assignments"}
+            else:
+                logging.warning("No assignments extracted from messages")
+                return {"message": "No assignments extracted from messages"}
         else:
-            responses = ndm.post_data(uncached_data)
-            logging.info(f"Processed {len(responses)} new assignments")
-            logging.info("Saving new assignments to cache")
-            cdm.save_to_json(responses, 'outputs/new_assignments.json')
-            print("-------------------------------------------------")
-            return {"message": f"Processed {len(responses)} new assignments"}
-
+            logging.warning("No messages retrieved")
+            return {"message": "No messages retrieved"}
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
         print(e)
+        return {"message": f"Error: {str(e)}"}
 
 if __name__ == "__main__":
     main()
