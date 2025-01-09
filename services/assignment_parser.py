@@ -70,7 +70,7 @@ class AssignmentParser:
             due_date = None
             if assignment_data['due_date'] != "Not found":
                 try:
-                    due_date_obj = datetime.strptime(f"{assignment_data['due_date']} 2024", "%b %d %Y")
+                    due_date_obj = datetime.strptime(f"{assignment_data['due_date']} 2025", "%b %d %Y")
                     due_date = {
                         "start": due_date_obj.isoformat(),
                         "end": None

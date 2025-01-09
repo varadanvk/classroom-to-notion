@@ -32,7 +32,7 @@ def query_database(database_id: str, statuses: List[str]) -> Dict[str, Any]:
     ndm = NotionDatabaseManager(database_id)
     cdm = ClassroomDataManager()
     results = ndm.get_tasks_by_status(statuses)
-    print(json.dumps(results, indent=2))
+    # print(json.dumps(results, indent=2))
     cdm.save_to_json(results, 'outputs/notion_results.json')
     return results
 
