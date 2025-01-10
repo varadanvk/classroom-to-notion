@@ -36,7 +36,7 @@ async def schedule_sync():
         while True:
             await asyncio.sleep(180)  # Wait for 3 minutes
             try:
-                async with session.post('http://localhost:8000/trigger-sync') as response:
+                async with session.post('http://localhost:8888/trigger-sync') as response:
                     print(f"Scheduled sync triggered. Response: {response.status}")
             except Exception as e:
                 print(f"Error triggering scheduled sync: {e}")
