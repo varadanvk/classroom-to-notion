@@ -1,8 +1,9 @@
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 import pytz
 from typing import List, Dict, Any
+
 
 class AssignmentParser:
     def __init__(self, activities):
@@ -12,11 +13,10 @@ class AssignmentParser:
     def set_activities(self, activities: List[Dict[str, Any]]) -> None:
         self.activities = activities
 
-
     def load_or_create_activities(self):
-        activities_file = 'constants/activities_with_teachers.json'
+        activities_file = "constants/activities_with_teachers.json"
         if os.path.exists(activities_file):
-            with open(activities_file, 'r') as file:
+            with open(activities_file, "r") as file:
                 self.activities = json.load(file)
             print(f"Loaded existing activities with teachers from {activities_file}")
         else:
@@ -31,56 +31,59 @@ class AssignmentParser:
     def assign_teachers(self):
         print("Assign teachers to activities:")
         for activity in self.activities:
-            teacher = input(f"Enter teacher name for '{activity['title']}' (or press Enter to skip): ")
-            activity['teacher'] = teacher.strip()
+            teacher = input(
+                f"Enter teacher name for '{activity['title']}' (or press Enter to skip): "
+            )
+            activity["teacher"] = teacher.strip()
 
-    def save_activities(self, filename: str = 'activities_with_teachers.json'):
-        with open(filename, 'w') as file:
+    def save_activities(self, filename: str = "activities_with_teachers.json"):
+        with open(filename, "w") as file:
             json.dump(self.activities, file, indent=2)
         print(f"Activities with teachers saved to {filename}")
 
     def match_assignment_to_activity(self, assignment: Dict) -> str:
-        posted_by = assignment.get('posted_by', '').lower()
-        
+        posted_by = assignment.get("posted_by", "").lower()
+
         # First, try to find an exact match
         for activity in self.activities:
-            if activity['teacher'].lower() == posted_by:
-                return activity['id']
-        
+            if activity["teacher"].lower() == posted_by:
+                return activity["id"]
+
         # If no exact match, try partial match
         for activity in self.activities:
-            if activity['teacher'].lower() in posted_by or posted_by in activity['teacher'].lower():
-                return activity['id']
-        
+            if (
+                activity["teacher"].lower() in posted_by
+                or posted_by in activity["teacher"].lower()
+            ):
+                return activity["id"]
+
         # If still no match, try matching any word in the teacher's name
         teacher_words = posted_by.split()
         for activity in self.activities:
-            activity_teacher_words = activity['teacher'].lower().split()
+            activity_teacher_words = activity["teacher"].lower().split()
             if any(word in activity_teacher_words for word in teacher_words):
-                return activity['id']
-        
+                return activity["id"]
+
         # If no match found, return an empty string
-        return ''
+        return ""
 
     def parse_assignments(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        
         pages = []
-        
+
         # Parse the due date
         for assignment_data in data:
             due_date = None
-            if assignment_data['due_date'] != "Not found":
+            if assignment_data["due_date"] != "Not found":
                 try:
-                    due_date_obj = datetime.strptime(f"{assignment_data['due_date']} 2025", "%b %d %Y")
-                    
+                    due_date_obj = datetime.strptime(
+                        f"{assignment_data['due_date']} 2025", "%b %d %Y"
+                    )
+
                     # Convert to PST timezone
-                    pacific_tz = pytz.timezone('America/Los_Angeles')
+                    pacific_tz = pytz.timezone("America/Los_Angeles")
                     due_date_obj = pacific_tz.localize(due_date_obj)
-                    
-                    due_date = {
-                        "start": due_date_obj.isoformat(),
-                        "end": None
-                    }
+
+                    due_date = {"start": due_date_obj.isoformat(), "end": None}
                 except ValueError:
                     print(f"Unable to parse due date: {assignment_data['due_date']}")
 
@@ -89,35 +92,23 @@ class AssignmentParser:
 
             # Create the Notion page structure
             notion_page = {
-                "parent": {"database_id": os.environ.get('NOTION_DATABASE_ID')},
+                "parent": {"database_id": os.environ.get("NOTION_DATABASE_ID")},
                 "properties": {
-                    "Status": {
-                        "status": {
-                            "name": "Not started"
-                        }
-                    },
-                    "Type": {
-                        "select": None
-                    },
-                    "Estimated Time": {
-                        "rich_text": []
-                    },
-                    "Priority": {
-                        "select": None
-                    },
-                    "Due Date": {
-                        "date": due_date
-                    },
+                    "Status": {"status": {"name": "Not started"}},
+                    "Type": {"select": None},
+                    "Estimated Time": {"rich_text": []},
+                    "Priority": {"select": None},
+                    "Due Date": {"date": due_date},
                     "Note": {
                         "rich_text": [
                             {
                                 "text": {
                                     "content": f"Assignment Link: {assignment_data['assignment_link']}\n"
-                                            f"Class Link: {assignment_data['class_link']}\n"
-                                            f"Class Name: {assignment_data['class_name']}\n"
-                                            f"Posted Date: {assignment_data['posted_date']}\n"
-                                            f"Posted By: {assignment_data['posted_by']}\n"
-                                            f"Description: {assignment_data['assignment_description']}"
+                                    f"Class Link: {assignment_data['class_link']}\n"
+                                    f"Class Name: {assignment_data['class_name']}\n"
+                                    f"Posted Date: {assignment_data['posted_date']}\n"
+                                    f"Posted By: {assignment_data['posted_by']}\n"
+                                    f"Description: {assignment_data['assignment_description']}"
                                 }
                             }
                         ]
@@ -126,29 +117,25 @@ class AssignmentParser:
                         "title": [
                             {
                                 "text": {
-                                    "content": assignment_data['assignment_name'],
-                                    "link": {
-                                        "url": assignment_data['assignment_link']
-                                    }
+                                    "content": assignment_data["assignment_name"],
+                                    "link": {"url": assignment_data["assignment_link"]},
                                 }
                             }
                         ]
-                    }
-                }
+                    },
+                },
             }
 
             # Add the Activity relation if a match was found
             if activity_id:
                 notion_page["properties"]["Activity"] = {
-                    "relation": [
-                        {
-                            "id": activity_id
-                        }
-                    ]
+                    "relation": [{"id": activity_id}]
                 }
             else:
-                print(f"No matching activity found for assignment: {assignment_data['assignment_name']}")
-            
+                print(
+                    f"No matching activity found for assignment: {assignment_data['assignment_name']}"
+                )
+
             pages.append(notion_page)
 
         return pages
