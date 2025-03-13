@@ -137,8 +137,7 @@ class ClassroomDataManager:
 
         print(f"Total processed messages: {len(processed_messages)}")
 
-        print(f"Total filtered messages: {len(filtered_messages)}")
-        return messages
+        return processed_messages
 
     def filter_message(self, message, criteria):
         """
