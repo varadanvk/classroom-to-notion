@@ -9,3 +9,9 @@ classroom_to_notion.log
 send_sms.py
 .aider*
 .venv/
+__pycache__/
+#pychache in any directory
+**/__pycache__/
+
+.vscode/
+.DS_Store

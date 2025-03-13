@@ -1,6 +1,7 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
+import pytz
 from typing import List, Dict, Any
 
 class AssignmentParser:
@@ -71,6 +72,11 @@ class AssignmentParser:
             if assignment_data['due_date'] != "Not found":
                 try:
                     due_date_obj = datetime.strptime(f"{assignment_data['due_date']} 2025", "%b %d %Y")
+                    
+                    # Convert to PST timezone
+                    pacific_tz = pytz.timezone('America/Los_Angeles')
+                    due_date_obj = pacific_tz.localize(due_date_obj)
+                    
                     due_date = {
                         "start": due_date_obj.isoformat(),
                         "end": None
